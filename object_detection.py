@@ -26,25 +26,48 @@ class image_converter:
 
   def detect_orange(self, image):
 
-      # Isolate the orange colour in the image as a binary image
-    #   msk = cv2.inRange(image, (70, 110, 140), (80, 190, 225))
-    #   output = cv2.bitwise_and(image, image, mask=msk)
+    #  msk = cv2.inRange(image, (70, 110, 140), (80, 190, 225))
+    #  output = cv2.bitwise_and(image, image, mask=msk)
 
-      img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    # Isolate the orange colour in the image as a binary image
+    
+    img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-      lwr = np.asarray([5, 10, 20], dtype='uint8')
-      uppr = np.asarray([25, 255, 255], dtype='uint8')
+    lwr = np.asarray([5, 10, 20], dtype='uint8')
+    uppr = np.asarray([25, 255, 255], dtype='uint8')
 
-      msk = cv2.inRange(img, lwr, uppr)  
+    msk = cv2.inRange(img, lwr, uppr)  
 
-      # g = cv2.imshow('mask', msk)
-      # img = cv2.bitwise_and(img, img, mask=msk)
+    return msk
 
-      return msk
- 
+  def detect_circle(self, image):
+    _, contours, _ = cv2.findContours(image, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
+    for c in contours:
+      approx = cv2.approxPolyDP(c, 0.01*cv2.arcLength(c, True), True)
+      area = cv2.contourArea(c)
+      
+      if len(approx) > 8:
+        M = cv2.moments(c)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
 
+        return cX, cY
 
+  def detect_rectangle(self, image):
+    _, contours, _ = cv2.findContours(image, cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+
+    for c in contours:
+      approx = cv2.approxPolyDP(c, 0.01*cv2.arcLength(c, True), True)
+      area = cv2.contourArea(c)
+      
+      if len(approx) < 8:
+        M = cv2.moments(c)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+
+        return cX, cY
+    
   # Recieve data from camera 1, process it, and publish
   def callback1(self,data):
     # Recieve the image
@@ -58,13 +81,17 @@ class image_converter:
 
     self.cv_image1 = self.detect_orange(self.cv_image1)
 
-    im1=cv2.imshow('window1', self.cv_image1)
+    im1 = cv2.imshow('window1', self.cv_image1)
     cv2.waitKey(1)
+
+    print(self.detect_circle(self.cv_image1))
+
+
     # Publish the results
-    try: 
-      self.image_pub1.publish(self.bridge.cv2_to_imgmsg(self.cv_image1, "bgr8"))
-    except CvBridgeError as e:
-      print(e)
+    # try: 
+      # self.image_pub1.publish(self.bridge.cv2_to_imgmsg(self.cv_image1, "bgr8"))
+    # except CvBridgeError as e:
+      # print(e)
 
 # call the class
 def main(args):
