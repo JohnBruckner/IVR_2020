@@ -77,8 +77,7 @@ class image_converter:
     def callback(self, data):
         # Recieve the image
         try:
-            # self.cv_image1 = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            self.cv_image2 = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            self.cv_image1 = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
 
@@ -87,17 +86,17 @@ class image_converter:
 
         
 
-        mask = self.detect_orange(self.cv_image2)
+        mask = self.detect_orange(self.cv_image1)
 
-        # im1 = cv2.imshow("window1", self.cv_image1)
-        im2 = cv2.imshow("window2", self.cv_image2)
+        im1 = cv2.imshow("window1", self.cv_image1)
+       
         cv2.waitKey(1)
 
         c_coords = self.detect_circle(mask)
         y_coord = self.cam1.raycast(c_coords)[0,0]
-        x_coords = self.cam2.raycast(c_coords)
+        # x_coord = self.cam2.raycast(c_coords)
 
-        print(x_coords[1, 1])
+        print(y_coord)
 
         # Publish the results
         # try:

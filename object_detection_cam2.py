@@ -17,15 +17,17 @@ class image_converter:
     def __init__(self, cam1, cam2):
         self.cam1 = cam1
         self.cam2 = cam2
-        
+
         # initialize the node named image_processing
         rospy.init_node("image_processing", anonymous=True)
-        # initialize a publisher to send images from camera1 to a topic named image_topic1
-        self.image_pub1 = rospy.Publisher("image_topic1", Image, queue_size=1)
+
+        # initialize a publisher to send images from camera2 to a topic named image_topic1
+        self.image_pub2 = rospy.Publisher("image_topic2", Image, queue_size=1)
 
         # initialize a subscriber to recieve messages rom a topic named /robot/camera1/image_raw and use callback function to recieve data
-        self.image_sub1 = rospy.Subscriber("/camera1/robot/image_raw", Image, self.callback)
-       
+        self.image_sub2 = rospy.Subscriber(
+            "/camera2/robot/image_raw", Image, self.callback
+        )
         # initialize the bridge between openCV and ROS
         self.bridge = CvBridge()
 
@@ -89,12 +91,11 @@ class image_converter:
 
         mask = self.detect_orange(self.cv_image2)
 
-        # im1 = cv2.imshow("window1", self.cv_image1)
+       
         im2 = cv2.imshow("window2", self.cv_image2)
         cv2.waitKey(1)
 
         c_coords = self.detect_circle(mask)
-        y_coord = self.cam1.raycast(c_coords)[0,0]
         x_coords = self.cam2.raycast(c_coords)
 
         print(x_coords[1, 1])
@@ -157,4 +158,5 @@ def main(args):
 # run the code if the node is called
 if __name__ == "__main__":
     main(sys.argv)
+
 
