@@ -97,6 +97,7 @@ class image_converter:
 
 class camera:
     def __init__(self, x, y, yaw):
+        self.c = 400.5
         self.f = 476.7
         self.z = 0
         self.x = x
@@ -108,13 +109,15 @@ class camera:
             [0, 0, 1, self.z],
             [0, 0, 0, 1],
         )
-        self.camera2px = np.array([476.7, 0, 400.5], [0, 476.7, 400.5], [0, 0, 1])
+        self.camera2px = np.array([self.f, 0, self.c], [0, self.f, self.c], [0, 0, 1])
         self.px2camera = np.linalg.inv(self.camera2px)
-        self.proj = np.array([1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 0])
+        self.proj = np.array(
+            [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1 / self.f, 0], [0, 0, 0, 0]
+        )
         self.inv_proj = np.linalg.pinv(self.proj)
-    
+
     def raycast(self, pixel):
-      
+        rc_matrix = self.world_m * self.inv_proj
 
 
 # call the class
