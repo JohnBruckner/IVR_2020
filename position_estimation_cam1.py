@@ -7,27 +7,23 @@ import cv2
 import numpy as np
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
-from std_msgs.msg import Float64MultiArray, Float64
 from cv_bridge import CvBridge, CvBridgeError
 
 
 class image_converter:
 
     # Defines publisher and subscriber
-    def __init__(self, cam1, cam2):
-        self.cam1 = cam1
-        self.cam2 = cam2
+    def __init__(self, cam):
+        self.cam = cam
 
         # initialize the node named image_processing
         rospy.init_node("image_processing", anonymous=True)
-
-        # initialize a publisher to send images from camera2 to a topic named image_topic1
-        self.image_pub2 = rospy.Publisher("image_topic2", Image, queue_size=1)
+        # initialize a publisher to send images from camera1 to a topic named image_topic1
+        self.image_pub1 = rospy.Publisher("image_topic1", Image, queue_size=1)
 
         # initialize a subscriber to recieve messages rom a topic named /robot/camera1/image_raw and use callback function to recieve data
-        self.image_sub2 = rospy.Subscriber(
-            "/camera2/robot/image_raw", Image, self.callback
-        )
+        self.image_sub1 = rospy.Subscriber("/camera1/robot/image_raw", Image, self.callback1)
+
         # initialize the bridge between openCV and ROS
         self.bridge = CvBridge()
 
@@ -76,29 +72,26 @@ class image_converter:
                 return cX, cY
 
     # Recieve data from camera 1, process it, and publish
-    def callback(self, data):
+    def callback1(self, data):
         # Recieve the image
         try:
-            # self.cv_image1 = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            self.cv_image2 = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            self.cv_image1 = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
 
         # Uncomment if you want to save the image
         # cv2.imwrite('image_copy.png', cv_image)
 
-        
+        mask = self.detect_orange(self.cv_image1)
 
-        mask = self.detect_orange(self.cv_image2)
-
-       
-        im2 = cv2.imshow("window2", self.cv_image2)
+        im1 = cv2.imshow("window1", self.cv_image1)
         cv2.waitKey(1)
 
-        c_coords = self.detect_circle(mask)
-        x_coords = self.cam2.raycast(c_coords)
+        cx, cy = self.detect_circle(mask)
 
-        print(x_coords[1, 1])
+        y_coord = self.cam.locate_obj(cx, cy, self.cv_image1)
+
+        print(y_coord)
 
         # Publish the results
         # try:
@@ -108,46 +101,48 @@ class image_converter:
 
 
 class camera:
-    def __init__(self, x, y, yaw):
+    def __init__(self):
         self.cx = 400
-        self.cy = 550 
+        self.cy = 550
         self.f = 476.7
-        self.z = 5
-        self.x = x
-        self.y = y
-        self.yaw = yaw
-        self.world_m = np.array([
-            [np.cos(yaw), -np.sin(yaw), 0, self.x],
-            [np.sin(yaw), np.cos(yaw), 0, self.y],
-            [0, 0, 1, self.z],
-            [0, 0, 0, 1]]
-        )
-        self.camera2px = np.array([[self.f, 0, self.cx], [0, self.f, self.cy], [0, 0, 1]])
-        self.px2camera = np.linalg.inv(self.camera2px)
-        self.proj = np.array(
-            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1 / self.f, 0], [0, 0, 0, 0]]
-        )
-        self.inv_proj = np.linalg.pinv(self.proj)
 
-    def raycast(self, pixel):
-        rc_matrix = np.linalg.inv(self.world_m) * self.inv_proj
+    def detect_green(self, image):
+        mask = cv2.inRange(image, (0, 100, 0), (0, 255, 0))
+        kernel = np.ones((5, 5), np.uint8)
+        mask = cv2.dilate(mask, kernel, iterations=3)
+        M = cv2.moments(mask)
+        cx = int(M['m10'] / M['m00'])
+        cy = int(M['m01'] / M['m00'])
+        return np.array([cx, cy])
 
-        px = np.append(pixel, [1]).transpose() # Transform to homogenous coordinates
-       
-        px = np.dot(self.px2camera, px)
-        px = np.append(px, [1])
+    def detect_blue(self, image):
+        mask = cv2.inRange(image, (100, 0, 0), (255, 0, 0))
+        kernel = np.ones((5, 5), np.uint8)
+        mask = cv2.dilate(mask, kernel, iterations=3)
+        M = cv2.moments(mask)
+        cx = int(M['m10'] / M['m00'])
+        cy = int(M['m01'] / M['m00'])
+        return np.array([cx, cy])
 
-        return  rc_matrix * px
+    def pixel2meter(self, image):
+        # Obtain the centre of each coloured blob
+        circle1Pos = self.detect_blue(image)
+        circle2Pos = self.detect_green(image)
+        # find the distance between two circles
+        dist = np.sum((circle1Pos - circle2Pos) ** 2)
+        return 3 / np.sqrt(dist)
 
-    def mult(self, a, b):
-        return sum( [a[i][0]*b[i] for i in range(len(b))] )
+    def locate_obj(self, px, py, image):
+        conversion = self.pixel2meter(image)
+        px = conversion * (px - self.cx)
+        py = conversion * (py - self.cy)
+
+        return px, py
 
 
-# call the class
 def main(args):
-    c1 = camera(18, 0, np.pi)
-    c2 = camera(0, -18, -np.pi/2)
-    ic = image_converter(c1, c2)
+    c = camera()
+    ic = image_converter(c)
     try:
         rospy.spin()
     except KeyboardInterrupt:
@@ -158,5 +153,3 @@ def main(args):
 # run the code if the node is called
 if __name__ == "__main__":
     main(sys.argv)
-
-
