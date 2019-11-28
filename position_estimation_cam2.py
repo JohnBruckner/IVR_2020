@@ -1,27 +1,33 @@
 #!/usr/bin/env python
+from attr import dataclass
 
 import roslib
 import sys
 import rospy
 import cv2
 import numpy as np
+from rospy import numpy_msg
+from std_msgs import msg
+from std_msgs.msg import Float64MultiArray
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
 
-class image_converter:
+class estimate_xz:
 
     # Defines publisher and subscriber
     def __init__(self, cam):
         self.cam = cam
 
         # initialize the node named image_processing
-        rospy.init_node("image_processing", anonymous=True)
-        # initialize a publisher to send images from camera1 to a topic named image_topic1
-        self.image_pub1 = rospy.Publisher("image_topic1", Image, queue_size=1)
+        rospy.init_node("sphehre_position_estimation_xz", anonymous=True)
 
-        # initialize a subscriber to recieve messages rom a topic named /robot/camera1/image_raw and use callback function to recieve data
+        self.h = msg.Header()
+        self.h.stamp = rospy.Time.now()
+
+        # initialize a publisher to send images from camera1 to a topic named image_topic1
+        self.image_pub1 = rospy.Publisher("sphere_xz", String, queue_size=1)       # initialize a subscriber to recieve messages rom a topic named /robot/camera1/image_raw and use callback function to recieve data
         self.image_sub1 = rospy.Subscriber("/camera2/robot/image_raw", Image, self.callback2)
 
         # initialize the bridge between openCV and ROS
@@ -91,13 +97,16 @@ class image_converter:
 
         y_coord = self.cam.locate_obj(cx, cy, self.cv_image1)
 
-        print(y_coord)
+        coords = "X: " + str(y_coord[0]) + \
+                 "Z: " + str(-y_coord[1])
+
+        coords_dict = {'x': y_coord[0], 'z': -y_coord[1]}
 
         # Publish the results
-        # try:
-        # self.image_pub1.publish(self.bridge.cv2_to_imgmsg(self.cv_image1, "bgr8"))
-        # except CvBridgeError as e:
-        # print(e)
+        try:
+            self.image_pub1.publish(str(coords_dict))
+        except CvBridgeError as e:
+            print(e)
 
 
 class camera:
@@ -142,7 +151,7 @@ class camera:
 
 def main(args):
     c = camera()
-    ic = image_converter(c)
+    ic = estimate_xz(c)
     try:
         rospy.spin()
     except KeyboardInterrupt:
