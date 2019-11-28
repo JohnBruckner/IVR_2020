@@ -16,10 +16,10 @@ class joint_estimation:
     # Defines publisher and subscriber
     def __init__(self):
         # initialize the node named image_processing
-        rospy.init_node('image_processing', anonymous=True)
+        rospy.init_node('joints_cam2', anonymous=True)
         # initialize a publisher to send images from camera2 to a topic named image_topic2
         # self.image_pub1 = rospy.Publisher("image_topic1", Image, queue_size=1)
-        self.image_pub2 = rospy.Publisher("image_topic2", String, queue_size=1)
+        self.joints_pub = rospy.Publisher("joints_pos_cam2", Float64MultiArray, queue_size=10)
 
         # initialize a subscriber to recieve messages rom a topic named /robot/camera1/image_raw and use callback function to recieve data
         # self.image_sub1 = rospy.Subscriber("/camera1/robot/image_raw", Image, self.callback2)
@@ -104,16 +104,17 @@ class joint_estimation:
         # Uncomment if you want to save the image
         # cv2.imwrite('image_copy.png', cv_image)
 
-        im2 = cv2.imshow('window2', self.cv_image2)
+        a = self.detect_joint_angles(self.cv_image2)
+        cv2.imshow('window', self.cv_image2)
+        cv2.waitKey(3)
 
-        cv2.waitKey(1)
-
-        # print(self.pixel2meter(self.cv_image2))
+        self.joints = Float64MultiArray()
+        self.joints.data = a
 
         # Publish the results
         try:
-            # self.image_pub2.publish(self.bridge.cv2_to_imgmsg(self.cv_image2, "bgr8"))
-            self.image_pub2.publish("hello world")
+            # self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+            self.joints_pub.publish(self.joints)
         except CvBridgeError as e:
             print(e)
 
