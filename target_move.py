@@ -6,6 +6,31 @@ import numpy as np
 from std_msgs.msg import String
 from std_msgs.msg import Float64
 
+# Calculate the forward kinematics
+def forward_kinematics(self, image): 
+  joints - self.detect_joint_angles(image) # or other method
+  end_effector = np.array([-2*np.cos(t_1)*np.cos(t_2)*np.cos(t_3)*np.cos(t_4) - 2*np.cos(t_4)*np.sin(t_1)*np.sin(t_3) + 2*np.cos(t_1)*np.sin(t_2)*np.sin(t_4)-3*np.cos(t_1)*np.cos(t_2)*np.cos(t_3)- 3*np.sin(t_1)*np.sin(t_3),
+                  -2*np.cos(t_2)*np.cos(t_3)*np.cos(t_4)*np.sin(t_1)+2*np.cos(t_1)*np.cos(t_4)*np.sin(t_3)+2*np.sin(t_1)*np.sin(t_4)-3*np.sin(t_1)*np.cos(t_2)*np.cos(t_3)+3*np.cos(t_1)*np.sin(t_3),
+                  -2*np.cos(t_3)*np.cos(t_4)*np.sin(t_2)-2*np.cos(t_2)*np.sin(t_4)-3*np.cos(t_3)*np.sin(t_2)+2])
+  return end_effector 
+
+# Calculate Jacobian
+def calculate_jacobian(self, image):
+    joints - self.detect_joint_angles(image) # or other method
+    [t_1, t_2, t_3, t_4] = joints
+    jacobian = np.array([[2*np.sin(t_1)*np.cos(t_2)*np.cos(t_3)*np.cos(t_4) - 2*np.cos(t_4)*np.cos(t_1)*np.sin(t_3) - 2*np.sin(t_1)*np.sin(t_2)*np.sin(t_4) + 3*np.sin(t_1)*np.cos(t_2)*np.cos(t_3) - 3*np.cos(t_1)*np.sin(t_3),
+                  2*np.cos(t_1)*np.sin(t_2)*np.cos(t_3)*np.cos(t_4) + 2*np.cos(t_1)*np.cos(t_2)*np.sin(t_4) + 3*np.cos(t_1)*np.sin(t_2)*np.cos(t_3),
+                  2*np.cos(t_1)*np.cos(t_2)*np.sin(t_3)*np.cos(t_4) - 2*np.cos(t_4)*np.sin(t_1)*np.cos(t_3) + 3*np.cos(t_1)*np.cos(t_2)*np.sin(t_3) - 3*np.sin(t_1)*np.cos(t_3)],
+                  2*np.cos(t_1)*np.cos(t_2)*np.cos(t_3)*np.sin(t_4) + 2*np.sin(t_4)*np.sin(t_1)*np.sin(t_3) - 2*np.sin(t_1)*np.sin(t_2)*np.cos(t_4),
+                  [-2*np.cos(t_2)*np.cos(t_3)*np.cos(t_4)*np.cos(t_1) - 2*np.sin(t_1)*np.cos(t_4)*np.sin(t_3) +2*np.cos(t_1)*np.sin(t_4) - 3*np.cos(t_1)*np.cos(t_2)*np.cos(t_3) - 3*np.sin(t_1)*np.sin(t_3),
+                  2*np.sin(t_2)*np.cos(t_3)*np.cos(t_4)*np.sin(t_1) + 3*np.sin(t_1)*np.sin(t_2)*np.cos(t_3),
+                  2*np.cos(t_2)*np.sin(t_3)*np.cos(t_4)*np.sin(t_1) + 2*np.cos(t_1)*np.cos(t_4)*np.cos(t_3) +3*np.sin(t_1)*np.cos(t_2)*np.sin(t_3)+3*np.cos(t_1)*np.cos(t_3),
+                  2*np.cos(t_2)*np.cos(t_3)*np.sin(t_4)*np.sin(t_1) - 2*np.cos(t_1)*np.sin(t_4)*np.sin(t_3) +2*np.sin(t_1)*np.cos(t_4)],
+                  [0,
+                  -2*np.cos(t_3)*np.cos(t_4)*np.cos(t_2) + 2*np.sin(t_2)*np.sin(t_4) -3*np.cos(t_3)*np.cos(t_2),
+                  2*np.sin(t_3)*np.cos(t_4)*np.sin(t_2)+3*np.sin(t_3)*np.sin(t_2),
+                  2*np.cos(t_3)*np.sin(t_4)*np.sin(t_2)-2*np.cos(t_2)*np.cos(t_4)]])
+  return jacobian
 
 # Publish data
 def move():
