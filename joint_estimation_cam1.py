@@ -5,6 +5,7 @@ import sys
 import rospy
 import cv2
 import numpy as np
+from std_msgs import msg
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float64MultiArray, Float64
@@ -18,7 +19,7 @@ class joint_estimation:
         # initialize the node named image_processing
         rospy.init_node('joint_cam1', anonymous=True)
         # initialize a publisher to send images from camera1 to a topic named image_topic1
-        self.joints_pub = rospy.Publisher("joints_pos_cam1", Float64MultiArray, queue_size=10)
+        self.joints_pub = rospy.Publisher("joints_pos_cam1", String, queue_size=10)
         # initialize a subscriber to recieve messages rom a topic named /robot/camera1/image_raw and use callback function to recieve data
         self.image_sub1 = rospy.Subscriber("/camera1/robot/image_raw", Image, self.callback1)
         # initialize the bridge between openCV and ROS
@@ -86,11 +87,16 @@ class joint_estimation:
         circle1Pos = a * self.detect_blue(image)
         circle2Pos = a * self.detect_green(image)
         circle3Pos = a * self.detect_red(image)
+
         # Solve using trigonometry
         ja1 = np.arctan2(center[0] - circle1Pos[0], center[1] - circle1Pos[1])
         ja2 = np.arctan2(circle1Pos[0] - circle2Pos[0], circle1Pos[1] - circle2Pos[1]) - ja1
-        ja3 = np.arctan2(circle2Pos[0] - circle3Pos[0], circle2Pos[1] - circle3Pos[1]) - ja2 - ja1
-        return np.array([ja1, ja2, ja3])
+        ja3 = np.arctan2(circle2Pos[0] - circle3Pos[0], circle2Pos[1] - circle3Pos[1]) -ja2 - ja1
+
+        jas = {'ja1': ja1, 'ja2': ja2, 'ja3': ja3}
+
+        return str(jas)
+        # return np.array([ja1, ja2, ja3])
 
     # Recieve data from camera 1, process it, and publish
     def callback1(self, data):
@@ -104,10 +110,10 @@ class joint_estimation:
         # cv2.imwrite('image_copy.png', cv_image)
 
         a = self.detect_joint_angles(self.cv_image1)
-        cv2.imshow('window', self.cv_image1)
+        cv2.imshow('window1', self.cv_image1)
         cv2.waitKey(3)
 
-        self.joints = Float64MultiArray()
+        self.joints = String()
         self.joints.data = a
 
         # Publish the results

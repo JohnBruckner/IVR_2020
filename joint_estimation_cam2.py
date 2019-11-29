@@ -19,7 +19,7 @@ class joint_estimation:
         rospy.init_node('joints_cam2', anonymous=True)
         # initialize a publisher to send images from camera2 to a topic named image_topic2
         # self.image_pub1 = rospy.Publisher("image_topic1", Image, queue_size=1)
-        self.joints_pub = rospy.Publisher("joints_pos_cam2", Float64MultiArray, queue_size=10)
+        self.joints_pub = rospy.Publisher("joints_pos_cam2", String, queue_size=10)
 
         # initialize a subscriber to recieve messages rom a topic named /robot/camera1/image_raw and use callback function to recieve data
         # self.image_sub1 = rospy.Subscriber("/camera1/robot/image_raw", Image, self.callback2)
@@ -81,17 +81,24 @@ class joint_estimation:
 
     # Calculate the relevant joint angles from the image
     def detect_joint_angles(self, image):
-        a = self.pixel2meter(image)
+        # a = self.pixel2meter(image)
+        a = 0.03896
+
         # Obtain the centre of each coloured blob
         center = a * self.detect_yellow(image)
         circle1Pos = a * self.detect_blue(image)
         circle2Pos = a * self.detect_green(image)
         circle3Pos = a * self.detect_red(image)
+
         # Solve using trigonometry
         ja1 = np.arctan2(center[0] - circle1Pos[0], center[1] - circle1Pos[1])
         ja2 = np.arctan2(circle1Pos[0] - circle2Pos[0], circle1Pos[1] - circle2Pos[1]) - ja1
         ja3 = np.arctan2(circle2Pos[0] - circle3Pos[0], circle2Pos[1] - circle3Pos[1]) - ja2 - ja1
-        return np.array([ja1, ja2, ja3])
+
+        jas = {'ja1': ja1, 'ja2': ja2, 'ja3': ja3}
+
+        return str(jas)
+        # return np.array([ja1, ja2, ja3])
 
     # Recieve data, process it, and publish
     def callback2(self, data):
@@ -105,10 +112,10 @@ class joint_estimation:
         # cv2.imwrite('image_copy.png', cv_image)
 
         a = self.detect_joint_angles(self.cv_image2)
-        cv2.imshow('window', self.cv_image2)
+        cv2.imshow('window2', self.cv_image2)
         cv2.waitKey(3)
 
-        self.joints = Float64MultiArray()
+        self.joints = String()
         self.joints.data = a
 
         # Publish the results
