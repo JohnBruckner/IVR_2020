@@ -9,9 +9,10 @@ from std_msgs.msg import Float64
 # Calculate the forward kinematics
 def forward_kinematics(x): 
 
-  end_effector = np.array([-2*np.cos(x[0])*np.cos(x[1])*np.cos(x[2])*np.cos(x[3]) - 2*np.cos(x[3])*np.sin(x[0])*np.sin(x[2]) + 2*np.cos(x[0])*np.sin(x[1])*np.sin(x[3])-3*np.cos(x[0])*np.cos(x[1])*np.cos(x[2])- 3*np.sin(x[0])*np.sin(x[2]),
-                  -2*np.cos(x[1])*np.cos(x[2])*np.cos(x[3])*np.sin(x[0])+2*np.cos(x[0])*np.cos(x[3])*np.sin(x[2])+2*np.sin(x[0])*np.sin(x[3])-3*np.sin(x[0])*np.cos(x[1])*np.cos(x[2])+3*np.cos(x[0])*np.sin(x[2]),
-                  -2*np.cos(x[2])*np.cos(x[3])*np.sin(x[1])-2*np.cos(x[1])*np.sin(x[3])-3*np.cos(x[2])*np.sin(x[1])+2])
+  end_effector = np.array([-2*np.cos(x[0]-np.pi/2)*np.cos(x[1]-np.pi/2)*np.cos(x[2])*np.cos(x[3]) - 2*np.cos(x[3])*np.sin(x[0]-np.pi/2)*np.sin(x[2]) + 2*np.cos(x[0]-np.pi/2)*np.sin(x[1]-np.pi/2)*np.sin(x[3])-3*np.cos(x[0]-np.pi/2)*np.cos(x[1]-np.pi/2)*np.cos(x[2])- 3*np.sin(x[0]-np.pi/2)*np.sin(x[2]),
+                  -2*np.cos(x[1]-np.pi/2)*np.cos(x[2])*np.
+                  cos(x[3])*np.sin(x[0]-np.pi/2)+2*np.cos(x[0]-np.pi/2)*np.cos(x[3])*np.sin(x[2])+2*np.sin(x[0]-np.pi/2)*np.sin(x[3])-3*np.sin(x[0]-np.pi/2)*np.cos(x[1]-np.pi/2)*np.cos(x[2])+3*np.cos(x[0]-np.pi/2)*np.sin(x[2]),
+                  -2*np.cos(x[2])*np.cos(x[3])*np.sin(x[1]-np.pi/2)-2*np.cos(x[1]-np.pi/2)*np.sin(x[3])-3*np.cos(x[2])*np.sin(x[1]-np.pi/2)+2])
 
   return end_effector 
   
