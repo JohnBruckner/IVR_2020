@@ -14,8 +14,10 @@ def callback(str1, str2):
     str1 = eval(str1.data)
     str2 = eval(str2.data)
 
-
-    # jas = {'ja1': ja1, 'ja2': ja2, 'ja3': ja3}
+    # ja1 will always be 0
+    # ja2 from both will be a combination of x, y of the blue joint
+    # ja3 corresponds to the angle x of joint 4
+    # the rotation (angle z of base joint) can be determined by the overall orientation of the arm
 
     print('cam1')
     print(str1)
